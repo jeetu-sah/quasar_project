@@ -4,6 +4,7 @@
       <div class="col">
         <h4>Student Profile Form</h4>
         {{ user }}
+        {{ validation.formValidationError }}
       </div>
     </div>
 
@@ -68,19 +69,13 @@
 
 <script setup lang="ts">
 import { Meta } from 'components/models';
-import ExampleComponent from 'components/ExampleComponent.vue';
-import { ref, computed } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import FamilyDetails from './../components/studentProfile/familyDetails/FamilyDetails.vue';
+import { validationStructure } from '../core/validation/userValidation';
+import useFormValidation from './../utils/composable/formValidation';
 import { useVuelidate } from '@vuelidate/core';
-import { required, email } from '@vuelidate/validators';
-// import Vuelidate from 'vuelidate';
-// import {
-//   email,
-//   maxValue,
-//   minValue,
-//   numeric,
-//   required,
-// } from 'vuelidate/lib/validators';
+
+const { validation } = useFormValidation();
 
 const user = ref({
   name: null,
@@ -93,14 +88,15 @@ const user = ref({
   },
 });
 
-const rules = computed(() => {
-  return {
-    name: { required },
-    lname: { required },
-    age: { required },
-    accept: { required },
-  };
-});
+const validationErrors = reactive({});
+// const rules = computed(() => {
+//   return {
+//     name: { required },
+//     lname: { required },
+//     age: { required },
+//     accept: { required },
+//   };
+// });
 // const rules = {
 //   name: { required },
 //   lname: { required },
@@ -108,7 +104,9 @@ const rules = computed(() => {
 //   accept: { required },
 // };
 
-const v$ = useVuelidate(rules, user.value);
+//const v$ = useVuelidate(validationStructure, user.value);
+
+const v$ = validation.setFormValidation(validationStructure, user.value);
 
 // const rules = ref({
 //   name: { required }, // Matches state.firstName
@@ -123,31 +121,26 @@ const v$ = useVuelidate(rules, user.value);
 
 const checkValidate = async () => {
   // vuelidate validation
-  v$.value.$validate();
-  console.log('v$.value', v$.value);
-  console.log('v$.value.$error', v$.value.$error);
-  // if success
   if (!v$.value.$error) {
     alert('Form Successfully Submitted!');
+  } else {
+    validation.setValidateErrorMsg(v$.value.$errors);
   }
-  // validation.setFormDataValue(user.value);
-  // validation.setFormDataValue(familyObj.value);
-  // setFormDataValue(user.value.fam, validationFamilyField)
-  // if(typeof user.value.fam == 'object') {
-  //   console.log('yes')
-  // } else{
-  //   console.log('no')
-  // }
 };
+// lifecycle hooks
+onMounted(() => {
+  //v$.value.$validate();
+  //validation.setFormValidation(validationStructure, user.value);
+});
 
 const errorMessages = (field: string) => {
-  // if (Object.keys(validation.form).length > 0) {
-  //   if (validation.form[field] == undefined) {
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // }
+  if (field != null) {
+    if (Object.keys(validation.formValidationError)) {
+      if (validation.formValidationError[field]) {
+        return true;
+      }
+    }
+  }
   return false;
 };
 </script>
